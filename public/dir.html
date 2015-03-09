@@ -1,0 +1,94 @@
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=false" />
+<style>
+body {
+	border:0px;
+}
+* {
+	font-size:20px;
+}
+a, pre {
+	font-size:15px;
+}
+</style>
+<script>
+function Ajax(method, uri, body, fn) {
+  if (typeof (XMLHttpRequest) == "undefined")
+    return false;
+  var x = new XMLHttpRequest ();
+  if (!x)
+    return false;
+  x.open (method, uri, false);
+  x.setRequestHeader ('Accept', 'text/plain');
+  x.setRequestHeader ('Accept', 'text/html');
+  x.setRequestHeader ("Content-Type", "application/x-ww-form-urlencoded; charset=UTF-8");
+  x.onreadystatechange = function(y) {
+    if (x.status == 200) {
+      if (fn) {
+        fn (x.responseText);
+      }
+    } else {
+      console.error ("ajax " + x.status)
+    }
+  }
+  x.send (body);
+  return true;
+}
+</script>
+<body>
+<div style='position:fixed;left:0px;top:0px;background-color:white'>
+<table style="width:100%;">
+<tr><td>
+<input id=back type=button value='&lt;'>
+</td><td style="width:100%">
+<input id=input value='/' style="width:100%">
+</td><td>
+<input id=button type=button value='&gt;'>
+</td></tr>
+</table>
+</div>
+<br />
+<pre id=output>
+</pre>
+<script>
+var bak = document.getElementById('back');
+var inp = document.getElementById('input');
+var but = document.getElementById('button');
+var out = document.getElementById('output');
+bak.onclick = function() {
+	window.location = "/";
+}
+but.onclick = function() {
+	Ajax("GET", "/dir/"+inp.value, "", function(body) {
+		out.innerHTML = body;
+		var nodes = out.children;
+		for (var i = 0; i<nodes.length; i++) {
+			var href = nodes[i].href;
+			var trislash = href.indexOf ("/dir/");
+			if (trislash != -1) {
+				href = href.substring (trislash+5)
+				if (href) {
+					(function(val) {
+					 nodes[i].onclick = function() {
+						 inp.value = val;
+						 but.click ();
+					 }
+					})(href);
+					nodes[i].href= '#'
+				}
+			} else {
+				alert (href);
+			}
+		}
+	});
+}
+inp.onkeyup = function(ev) {
+	if (ev.keyCode == 13) {
+		but.click ();
+	}
+};
+but.click ();
+</script>
+</body>
+</html>
+`
