@@ -102,6 +102,7 @@ func main() {
 	}
 	registerGetRoute(s, "cmd", handleCmd)
 	registerGetRoute(s, "dir", handleDir)
+	registerGetRoute(s, "kill", handleKill)
 	//	registerGetRoute(s, "start", handleStart)
 	//	registerGetRoute(s, "stop", handleStop)
 	registerGetRoute(s, "", showIndex)
@@ -122,6 +123,7 @@ func handleList(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleCmd(w http.ResponseWriter, r *http.Request) {
+	const SHELL = "/system/bin/sh"
 	path, err := url.QueryUnescape(r.URL.Path)
 	if err != nil {
 		path = r.URL.Path
@@ -131,10 +133,46 @@ func handleCmd(w http.ResponseWriter, r *http.Request) {
 		str, _ := getFile("/cmd.html")
 		fmt.Fprintln(w, parseTemplate(str))
 	} else {
-		argv := strings.Split(path, " ")
-		out, err := exec.Command(argv[0], argv[1:]...).Output()
+		fmt.Println(path)
+		//argv := strings.Split(path, " ")
+		out, err := exec.Command(SHELL, "-c", path).Output()
+		// out, err := exec.Command(argv[0], argv[1:]...).Output()
 		if err == nil {
 			fmt.Fprintln(w, string(out))
+		}
+	}
+}
+
+func handleKill(w http.ResponseWriter, r *http.Request) {
+	const SHELL = "/system/bin/sh"
+	const KILL = "/system/bin/kill"
+	path, err := url.QueryUnescape(r.URL.Path)
+	if err != nil {
+		path = r.URL.Path
+	}
+	path = path[6:] // assume "/cmd/"
+	if path == "" {
+		str, _ := getFile("/cmd.html")
+		fmt.Fprintln(w, parseTemplate(str))
+	} else {
+		fmt.Println(path)
+		if path == "b2g" {
+			out, err := exec.Command(SHELL, "-c",
+				"ps| grep b2g|grep root| grep ' 1 '").Output()
+			// out, err := exec.Command(argv[0], argv[1:]...).Output()
+			if err == nil {
+				outstr := strings.TrimSpace(string(out))
+				words := strings.Fields(outstr)
+				fmt.Fprintln(w, outstr)
+				fmt.Println("kill -9 " + words[1])
+				_, err2 := exec.Command(SHELL, "-c", "kill -9 "+words[1]).Output()
+				if err2 != nil {
+					fmt.Println("ERROR HAPPEN")
+				}
+
+			}
+		} else {
+			fmt.Fprintln(w, "TODO")
 		}
 	}
 }
